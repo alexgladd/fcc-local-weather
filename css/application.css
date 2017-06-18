@@ -1,0 +1,29 @@
+/* Local Weather app CSS */
+
+body {
+  color: #EFE9F4;
+  background-color: #373F47;
+  margin-top: 40px;
+}
+
+h3 {
+  margin-top: 0px;
+  margin-bottom: 10px;
+}
+
+#weather-current {
+  background-color: #779CAB;
+  border-color: #779CAB;
+  border-style: solid;
+  border-width: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+#weather-forecast {
+  background-color: #627C85;
+  border-color: #627C85;
+  border-style: solid;
+  border-width: 20px;
+  border-radius: 10px;
+}
