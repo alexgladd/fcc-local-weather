@@ -24,10 +24,10 @@
 
     <div id="weather-current" class="row">
       <h3>Current Conditions</h3>
-      <div class="col-xs-4 col-sm-3 col-sm-offset-3">
+      <div id="current-img" class="col-xs-4 col-sm-3 col-sm-offset-3">
         <img class="img-responsive" src="https://api.weather.gov/icons/land/night/tsra_hi,30/sct,20?size=large" alt="Thunderstorms">
       </div>
-      <div class="col-xs-8 col-sm-6">
+      <div id="current-txt" class="col-xs-8 col-sm-6">
         TEXT
       </div>
     </div>
@@ -35,18 +35,38 @@
     <div id="weather-forecast" class="row">
       <h3>Forecast</h3>
       <div class="col-xs-12 col-sm-4">
-        <div class="forecast-card">
-          FORECAST 1
+        <div class="media forecast-card">
+          <div id="forecast-1-img" class="media-left">
+            <img src="https://api.weather.gov/icons/land/night/tsra_hi,30/sct,20?size=small" alt="Thunderstorms">
+          </div>
+          <div class="media-body">
+            <h4 id="forecast-1-heading" class="media-heading">Tonight</h4>
+            <div id="forecast-1-txt">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</div>
+          </div>
         </div>
       </div>
+
       <div class="col-xs-12 col-sm-4">
-        <div class="forecast-card">
-          FORECAST 2
+        <div class="media forecast-card">
+          <div id="forecast-2-img" class="media-left">
+            <img src="https://api.weather.gov/icons/land/night/tsra_hi,30/sct,20?size=small" alt="Thunderstorms">
+          </div>
+          <div class="media-body">
+            <h4 id="forecast-2-heading" class="media-heading">Tonight</h4>
+            <div id="forecast-2-txt">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</div>
+          </div>
         </div>
       </div>
+
       <div class="col-xs-12 col-sm-4">
-        <div class="forecast-card">
-          FORECAST 3
+        <div class="media forecast-card">
+          <div id="forecast-3-img" class="media-left">
+            <img src="https://api.weather.gov/icons/land/night/tsra_hi,30/sct,20?size=small" alt="Thunderstorms">
+          </div>
+          <div class="media-body">
+            <h4 id="forecast-3-heading" class="media-heading">Tonight</h4>
+            <div id="forecast-3-txt">Lorem ipsum dolor sit amet, consectetur adipisicing elit.</div>
+          </div>
         </div>
       </div>
     </div>
