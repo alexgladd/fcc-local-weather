@@ -4,19 +4,27 @@
 
 // globals
 var userPosition = {
-  "latitude": 0.0,
-  "longitude": 0.0
+  "latitude": 37.78,
+  "longitude": -122.41
 };
 
 var localWeather;
+var useF = true;
 
 // jQuery start -------------------------------------------
 $(document).ready(function () {
+  // button setup
+  setupDegButtons();
+  $("#deg-f-btn").on("click", onDegFClick);
+  $("#deg-c-btn").on("click", onDegCClick);
+
+  $("#deg-f-btn").prop("disabled", true);
+  $("#deg-c-btn").prop("disabled", true);
+
   // get location
   requestUserLocation();
 });
 
-// events -------------------------------------------------
 function requestUserLocation() {
   // try to retrieve location
   if (navigator.geolocation) {
@@ -25,12 +33,31 @@ function requestUserLocation() {
       userPosition.longitude = position.coords.longitude;
 
       onUserLocation();
+    },
+    function(err) {
+      $("#current-txt").html("Failed to get current location; defaulting to San Francisco, CA...");
+      onUserLocation();
     });
   } else {
-    userPosition.latitude = 37.77;
-    userPosition.longitude = -122.42;
-
+    $("#current-txt").html("Unable to request location; defaulting to San Francisco, CA...");
     onUserLocation();
+  }
+}
+
+// events -------------------------------------------------
+function onDegFClick() {
+  if (!useF) {
+    useF = true;
+    setupDegButtons();
+    renderWeatherContent();
+  }
+}
+
+function onDegCClick() {
+  if (useF) {
+    useF = false;
+    setupDegButtons();
+    renderWeatherContent();
   }
 }
 
@@ -40,23 +67,74 @@ function onUserLocation() {
 }
 
 function onWeatherCollected() {
+  // render weather
+  renderWeatherContent();
+
+  // enable buttons
+  $("#deg-f-btn").prop("disabled", false);
+  $("#deg-c-btn").prop("disabled", false);
+}
+
+function renderWeatherContent() {
   // location
   $("#location").html(localWeather.getPoint().getRelativeLocation());
 
   // current conditions
   var stationInfo = localWeather.getStationObservation().getStationInfo();
   var observation = localWeather.getStationObservation().getObservation();
-  console.log(stationInfo);
-  console.log(observation);
+  var forecasts = localWeather.getPointForecast().getForecasts();
+  // console.log(stationInfo);
+  // console.log(observation);
+  // console.log(forecasts);
 
   $("#current-img").html(createCurrentImg(observation.icon, observation.message));
   $("#current-txt").html(createCurrentHtml(stationInfo, observation));
+
+  for (var i = 0; i < forecasts.length; i++) {
+    createForecastContent(i + 1, forecasts[i]);
+  }
+}
+
+// content creation ---------------------------------------
+function setupDegButtons() {
+  if (useF) {
+    $("#deg-c-btn").removeClass("btn-info").addClass("btn-default");
+    $("#deg-f-btn").removeClass("btn-default").addClass("btn-info");
+  } else {
+    $("#deg-f-btn").removeClass("btn-info").addClass("btn-default");
+    $("#deg-c-btn").removeClass("btn-default").addClass("btn-info");
+  }
+}
+
+function createForecastContent(num, forecast) {
+  var imgId = "#forecast-" + num + "-img";
+  var headingId = "#forecast-" + num + "-heading";
+  var tempId = "#forecast-" + num + "-temp";
+  var txtId = "#forecast-" + num + "-txt";
+
+  $(imgId).html(createForecastImg(forecast.icon, forecast.shortForecast));
+  $(headingId).html(forecast.periodName);
+  $(tempId).html(createForecastTemp(forecast.temperature, forecast.temperatureUnit, forecast.isDaytime));
+  $(txtId).html(forecast.detailedForecast);
+}
+
+function createForecastTemp(temperature, units, isDaytime) {
+  if (isDaytime) {
+    return "<strong>High: " + getTemperature(temperature, units) + "</strong>";
+  } else {
+    return "<strong>Low: " + getTemperature(temperature, units) + "</strong>";
+  }
 }
 
 function createCurrentHtml(stationInfo, observation) {
   var html = "<h4>" + observation.message + "</h4>\n"
-  html += "<strong>Temperature:</strong> " + observation.tempC + "<br>";
+  html += "<strong>Temperature:</strong> " + getTemperature(observation.temperature, observation.tempUnitCode) + "<br>";
+  html += "<strong>Humidity:</strong> " + getHumidity(observation.humidity) + "<br>";
   html += "<strong>Station:</strong> " + stationInfo.id + " - " + stationInfo.name + "<br>";
+
+  var obsDate = new Date(observation.timestamp);
+
+  html += "<strong>Time:</strong> " + obsDate.toString() + "<br>";
 
   return html;
 }
@@ -90,6 +168,67 @@ function getIconURI(rawURI, size) {
   }
 }
 
+function getHumidity(humidity) {
+  if (humidity === null) {
+    return "--";
+  } else {
+    return Math.round(humidity) + "%";
+  }
+}
+
+function getTemperature(temperature, units) {
+  if (temperature === null) {
+    return "--";
+  }
+
+  if (useF) {
+    return convertTemp(temperature, units) + "F";
+  } else {
+    return convertTemp(temperature, units) + "C";
+  }
+}
+
+function convertTemp(temperature, units) {
+  if (useF) {
+    // should produce degrees F
+    switch (units) {
+      case "c":
+      case "C":
+      case "unit:degC":
+        return degC2DegF(temperature);
+
+      case "f":
+      case "F":
+      case "unit:degF":
+        return Math.round(temperature);
+    }
+  } else {
+    // should produce degrees C
+    switch (units) {
+      case "c":
+      case "C":
+      case "unit:degC":
+        return Math.round(temperature);
+
+      case "f":
+      case "F":
+      case "unit:degF":
+        return degF2DegC(temperature);
+    }
+  }
+
+  console.log("!!!WARN: falling through to no temp conversion for units " + units);
+  return Math.round(temperature);
+}
+
+function degC2DegF(tempC) {
+  return Math.round((tempC * (9.0 / 5.0)) + 32);
+}
+
+function degF2DegC(tempF) {
+  return Math.round((tempF - 32) * (5.0 / 9.0));
+}
+
 // prototypes ---------------------------------------------
 
 var LocalWeather = function(latitude, longitude) {
@@ -106,6 +245,7 @@ var LocalWeather = function(latitude, longitude) {
 
   this.getPoint = function() { return point; };
   this.getStationObservation = function() { return stationObservation; };
+  this.getPointForecast = function() { return pointForecast; };
 
   // private
   var havePoint = function() {
@@ -114,7 +254,8 @@ var LocalWeather = function(latitude, longitude) {
   };
 
   var haveObservation = function() {
-    finalCallback();
+    pointForecast = new LWForecast(point);
+    pointForecast.fetch(finalCallback);
   };
 };
 
@@ -200,11 +341,49 @@ var LWObservation = function(lwPoint) {
     console.log(o);
     observation = {
       "icon": o.properties.icon,
+      "timestamp": o.properties.timestamp,
       "message": o.properties.textDescription,
-      "tempC": o.properties.temperature.value,
+      "temperature": o.properties.temperature.value,
+      "tempUnitCode": o.properties.temperature.unitCode,
       "humidity": o.properties.relativeHumidity.value,
       "windSpeed": o.properties.windSpeed.value
     };
+
+    callback();
+  };
+};
+
+var LWForecast = function(lwPoint) {
+  var point = lwPoint;
+  var forecasts = [];
+  var callback;
+
+  // public
+  this.fetch = function(cb) {
+    callback = cb;
+    console.log("Starting point forecast fetch");
+
+    var uri = "https://api.weather.gov/points/" + point.latitude() + "," + point.longitude() + "/forecast";
+    $.getJSON(uri, onForecast);
+  };
+
+  this.getForecasts = function() { return forecasts; };
+
+  // private
+  var onForecast = function(forecast) {
+    console.log(forecast);
+    var rawForecasts = forecast.properties.periods;
+    for (var i = 0; i < 3; i++) {
+      forecasts.push({
+        "periodName": rawForecasts[i].name,
+        "icon": rawForecasts[i].icon,
+        "shortForecast": rawForecasts[i].shortForecast,
+        "detailedForecast": rawForecasts[i].detailedForecast,
+        "temperature": rawForecasts[i].temperature,
+        "temperatureUnit": rawForecasts[i].temperatureUnit,
+        "isDaytime": rawForecasts[i].isDaytime
+      });
+    }
 
     callback();
   };
